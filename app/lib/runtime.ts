@@ -45,11 +45,11 @@ export async function ensureDatabase(db: D1Database): Promise<void> {
   if (Number(count?.total ?? 0) === 0) {
     await db.batch([
       db.prepare("INSERT INTO workshops (title, description, instructor, starts_at, room, capacity) VALUES (?, ?, ?, ?, ?, ?)")
-        .bind("SAP Build Apps: do zero ao protótipo", "Crie uma experiência empresarial responsiva usando recursos low-code.", "Marina Alves", "2026-09-19T10:30:00-03:00", "Sala Iracema", 30),
+        .bind("SAP Build Apps: do zero ao protótipo", "Crie uma experiência empresarial responsiva usando recursos low-code.", "Marina Alves", "2026-10-31", "Sala Iracema", 30),
       db.prepare("INSERT INTO workshops (title, description, instructor, starts_at, room, capacity) VALUES (?, ?, ?, ?, ?, ?)")
-        .bind("Integrações inteligentes com SAP BTP", "Conecte serviços, eventos e APIs em um fluxo prático na SAP BTP.", "Rafael Moura", "2026-09-19T10:30:00-03:00", "Sala Jangada", 24),
+        .bind("Integrações inteligentes com SAP BTP", "Conecte serviços, eventos e APIs em um fluxo prático na SAP BTP.", "Rafael Moura", "2026-10-31", "Sala Jangada", 24),
       db.prepare("INSERT INTO workshops (title, description, instructor, starts_at, room, capacity) VALUES (?, ?, ?, ?, ?, ?)")
-        .bind("Clean Core na prática", "Aplique extensibilidade e boas decisões de arquitetura em um cenário S/4HANA.", "Camila Nogueira", "2026-09-19T14:00:00-03:00", "Sala Dragão do Mar", 20),
+        .bind("Clean Core na prática", "Aplique extensibilidade e boas decisões de arquitetura em um cenário S/4HANA.", "Camila Nogueira", "2026-10-31", "Sala Dragão do Mar", 20),
     ]);
   }
 }
