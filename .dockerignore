@@ -1,0 +1,16 @@
+.git
+.github
+.worktrees
+.superpowers
+.next
+node_modules
+.env
+.env.*
+!.env.example
+data
+*.db*
+coverage
+test-results
+npm-debug.log*
+docs
+participantes-teste*.csv

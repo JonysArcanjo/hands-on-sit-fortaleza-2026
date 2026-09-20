@@ -42,3 +42,7 @@ yarn-error.log*
 /outputs/
 /work/
 /.worktrees/
+
+# SQLite local data
+/data/
+*.db*
