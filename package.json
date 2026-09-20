@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "test": "vitest run",
     "test:deploy-e2e": "npm run build && node tests/deploy-e2e.mjs",
@@ -21,7 +21,7 @@
     "next": "^16.3.3",
     "react": "19.2.6",
     "react-dom": "19.2.6",
-    "xlsx": "^0.18.5"
+    "read-excel-file": "^9.3.10"
   },
   "devDependencies": {
     "@eslint/js": "9.39.4",
@@ -36,6 +36,7 @@
     "eslint-plugin-jsx-a11y": "6.10.2",
     "eslint-plugin-react": "7.37.5",
     "eslint-plugin-react-hooks": "7.1.1",
+    "fflate": "^0.8.3",
     "globals": "16.4.0",
     "tailwindcss": "4.2.1",
     "typescript": "5.9.3",

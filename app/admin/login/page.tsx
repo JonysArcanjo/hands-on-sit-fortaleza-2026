@@ -2,9 +2,11 @@
 
 import { FormEvent, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { StatusMessage } from "../../components/StatusMessage";
 
 export default function AdminLogin() {
+  const router = useRouter();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -14,7 +16,7 @@ export default function AdminLogin() {
       const response = await fetch("/api/admin/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: form.get("email"), password: form.get("password") }) });
       const data = await response.json() as { message?: string };
       if (!response.ok) setError(data.message ?? "E-mail ou senha incorretos.");
-      else window.location.assign("/admin");
+      else router.replace("/admin");
     } catch { setError("Não foi possível entrar agora."); }
     finally { setLoading(false); }
   }

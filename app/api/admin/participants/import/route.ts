@@ -1,6 +1,6 @@
-import * as XLSX from "xlsx";
 import { requireAdmin } from "../../../../lib/admin";
 import { parseParticipantRows } from "../../../../lib/import-participants";
+import { parseParticipantFile } from "../../../../lib/participant-file";
 import { appEnv, ensureDatabase, json } from "../../../../lib/runtime";
 
 export async function POST(request: Request) {
@@ -11,9 +11,7 @@ export async function POST(request: Request) {
   if (file.size > 5 * 1024 * 1024) return json({ message: "O arquivo deve ter no máximo 5 MB." }, { status: 413 });
   if (!/\.(csv|xlsx)$/i.test(file.name)) return json({ message: "Formato incompatível. Envie CSV ou XLSX." }, { status: 400 });
   try {
-    const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: "" });
+    const rows = await parseParticipantFile(file.name, await file.arrayBuffer());
     const result = parseParticipantRows(rows);
     const { DB } = appEnv();
     await ensureDatabase(DB);
