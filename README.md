@@ -1,6 +1,6 @@
 # Hands-on SAP Inside Track Fortaleza 2026
 
-Aplicação responsiva para participantes previamente inscritos escolherem um único Hands-on. Inclui validação por e-mail, controle de vagas e painel administrativo para importação de participantes, programação e inscrições.
+Aplicação responsiva, otimizada para smartphones, para participantes previamente inscritos escolherem um único Hands-on. Inclui validação por e-mail, controle de vagas e painel administrativo para importação de participantes, programação e inscrições.
 
 ## Desenvolvimento
 
@@ -12,6 +12,8 @@ npm run dev
 npm test
 npm run build
 ```
+
+O desenvolvimento local usa Next.js com SQLite em `./data/hands-on.db`, salvo quando `DATABASE_PATH` for informado.
 
 ## Configuração administrativa
 
@@ -33,4 +35,20 @@ O painel aceita arquivos CSV e XLSX de até 5 MB. A primeira planilha deve conte
 
 ## Persistência
 
-O site usa a vinculação D1 `DB`. Migrações ficam em `drizzle/`; três Hands-on demonstrativos são inseridos quando o banco está vazio. Participantes reais entram apenas pela importação.
+O site usa SQLite. O esquema é criado de forma idempotente na primeira requisição; os dois Hands-on padrão são inseridos somente quando a tabela está vazia. Participantes reais entram apenas pela importação.
+
+No Docker, o arquivo fica em `/app/data/hands-on.db`, dentro do volume nomeado `hands_on_data`, e sobrevive à recriação do contêiner.
+
+## Deploy em VPS
+
+O procedimento completo para Debian, Docker Compose, acesso pelo IP, atualização, logs, backup e restauração está em [docs/deploy-vps.md](docs/deploy-vps.md).
+
+Resumo após configurar o `.env`:
+
+```bash
+docker compose up -d --build
+docker compose ps
+curl --fail http://127.0.0.1/api/health
+```
+
+Nunca execute `docker compose down -v` no servidor: a opção `-v` remove o volume que contém participantes e inscrições.
