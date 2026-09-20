@@ -1,18 +1,34 @@
-import { env } from "cloudflare:workers";
+import type { DatabaseBinding } from "../../db/database";
+import { createSqliteDatabase } from "../../db/sqlite";
 import { defaultWorkshops } from "./default-workshops";
 
 export interface AppEnv {
-  DB: D1Database;
+  DB: DatabaseBinding;
   ADMIN_EMAIL?: string;
   ADMIN_PASSWORD_HASH?: string;
   SESSION_SECRET?: string;
 }
 
+let databaseState: { path: string; database: DatabaseBinding } | undefined;
+
 export function appEnv(): AppEnv {
-  return env as unknown as AppEnv;
+  const databasePath = process.env.DATABASE_PATH || (process.env.NODE_ENV === "production" ? "" : "./data/hands-on.db");
+  if (!databasePath) {
+    throw new Error("DATABASE_PATH deve ser informado no ambiente de produção.");
+  }
+  if (!databaseState || databaseState.path !== databasePath) {
+    databaseState?.database.close();
+    databaseState = { path: databasePath, database: createSqliteDatabase(databasePath) };
+  }
+  return {
+    DB: databaseState.database,
+    ADMIN_EMAIL: process.env.ADMIN_EMAIL,
+    ADMIN_PASSWORD_HASH: process.env.ADMIN_PASSWORD_HASH,
+    SESSION_SECRET: process.env.SESSION_SECRET,
+  };
 }
 
-export async function ensureDatabase(db: D1Database): Promise<void> {
+export async function ensureDatabase(db: DatabaseBinding): Promise<void> {
   await db.batch([
     db.prepare(`CREATE TABLE IF NOT EXISTS participants (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

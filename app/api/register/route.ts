@@ -3,7 +3,9 @@ import { isRegistrationOpen } from "../../lib/registration-deadline";
 
 export async function POST(request: Request) {
   const { participantId, workshopId } = await request.json() as { participantId?: number; workshopId?: number };
-  if (!Number.isInteger(participantId) || !Number.isInteger(workshopId)) return json({ kind: "invalid", message: "Seleção inválida." }, { status: 400 });
+  if (typeof participantId !== "number" || !Number.isInteger(participantId) || typeof workshopId !== "number" || !Number.isInteger(workshopId)) {
+    return json({ kind: "invalid", message: "Seleção inválida." }, { status: 400 });
+  }
   const { DB } = appEnv();
   await ensureDatabase(DB);
   const settings = await DB.prepare("SELECT registration_deadline AS registrationDeadline FROM event_settings WHERE id = 1").first<{ registrationDeadline: string | null }>();
