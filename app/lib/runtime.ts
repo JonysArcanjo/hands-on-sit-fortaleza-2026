@@ -1,4 +1,5 @@
 import { env } from "cloudflare:workers";
+import { defaultWorkshops } from "./default-workshops";
 
 export interface AppEnv {
   DB: D1Database;
@@ -38,19 +39,20 @@ export async function ensureDatabase(db: D1Database): Promise<void> {
       workshop_id INTEGER NOT NULL REFERENCES workshops(id) ON DELETE RESTRICT,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )`),
+    db.prepare(`CREATE TABLE IF NOT EXISTS event_settings (
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+      registration_deadline TEXT,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`),
     db.prepare("CREATE INDEX IF NOT EXISTS idx_registrations_workshop_id ON registrations(workshop_id)"),
+    db.prepare("INSERT OR IGNORE INTO event_settings (id, registration_deadline) VALUES (1, NULL)"),
   ]);
 
   const count = await db.prepare("SELECT COUNT(*) AS total FROM workshops").first<{ total: number }>();
   if (Number(count?.total ?? 0) === 0) {
-    await db.batch([
-      db.prepare("INSERT INTO workshops (title, description, instructor, starts_at, room, capacity) VALUES (?, ?, ?, ?, ?, ?)")
-        .bind("SAP Build Apps: do zero ao protótipo", "Crie uma experiência empresarial responsiva usando recursos low-code.", "Marina Alves", "2026-10-31", "Sala Iracema", 30),
-      db.prepare("INSERT INTO workshops (title, description, instructor, starts_at, room, capacity) VALUES (?, ?, ?, ?, ?, ?)")
-        .bind("Integrações inteligentes com SAP BTP", "Conecte serviços, eventos e APIs em um fluxo prático na SAP BTP.", "Rafael Moura", "2026-10-31", "Sala Jangada", 24),
-      db.prepare("INSERT INTO workshops (title, description, instructor, starts_at, room, capacity) VALUES (?, ?, ?, ?, ?, ?)")
-        .bind("Clean Core na prática", "Aplique extensibilidade e boas decisões de arquitetura em um cenário S/4HANA.", "Camila Nogueira", "2026-10-31", "Sala Dragão do Mar", 20),
-    ]);
+    await db.batch(defaultWorkshops.map((workshop) => db
+      .prepare("INSERT INTO workshops (title, description, instructor, starts_at, room, capacity) VALUES (?, ?, ?, ?, ?, ?)")
+      .bind(workshop.title, workshop.description, workshop.instructor, workshop.startsAt, workshop.room, workshop.capacity)));
   }
 }
 

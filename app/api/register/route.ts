@@ -1,10 +1,13 @@
 import { appEnv, ensureDatabase, json } from "../../lib/runtime";
+import { isRegistrationOpen } from "../../lib/registration-deadline";
 
 export async function POST(request: Request) {
   const { participantId, workshopId } = await request.json() as { participantId?: number; workshopId?: number };
   if (!Number.isInteger(participantId) || !Number.isInteger(workshopId)) return json({ kind: "invalid", message: "Seleção inválida." }, { status: 400 });
   const { DB } = appEnv();
   await ensureDatabase(DB);
+  const settings = await DB.prepare("SELECT registration_deadline AS registrationDeadline FROM event_settings WHERE id = 1").first<{ registrationDeadline: string | null }>();
+  if (!isRegistrationOpen(settings?.registrationDeadline)) return json({ kind: "closed", message: "O período de inscrições para os Hands-on foi encerrado." }, { status: 409 });
   const participant = await DB.prepare("SELECT id FROM participants WHERE id = ?").bind(participantId).first();
   if (!participant) return json({ kind: "not-found", message: "Participante não encontrado." }, { status: 404 });
   const already = await DB.prepare("SELECT id FROM registrations WHERE participant_id = ?").bind(participantId).first();

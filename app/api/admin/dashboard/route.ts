@@ -16,5 +16,6 @@ export async function GET(request: Request) {
     COUNT(r.id) AS registrations FROM workshops w LEFT JOIN registrations r ON r.workshop_id = w.id GROUP BY w.id ORDER BY w.starts_at`).all();
   const registrations = await DB.prepare(`SELECT r.id, r.created_at AS createdAt, p.name, p.email, w.title AS workshop
     FROM registrations r JOIN participants p ON p.id = r.participant_id JOIN workshops w ON w.id = r.workshop_id ORDER BY r.created_at DESC`).all();
-  return json({ metrics, workshops: workshops.results, registrations: registrations.results });
+  const settings = await DB.prepare("SELECT registration_deadline AS registrationDeadline FROM event_settings WHERE id = 1").first();
+  return json({ metrics, workshops: workshops.results, registrations: registrations.results, settings });
 }

@@ -1,4 +1,5 @@
 import { normalizeEmail, isValidEmail } from "../../lib/participants";
+import { isRegistrationOpen } from "../../lib/registration-deadline";
 import { appEnv, ensureDatabase, json } from "../../lib/runtime";
 
 export async function POST(request: Request) {
@@ -12,6 +13,8 @@ export async function POST(request: Request) {
   const existing = await DB.prepare(`SELECT r.id, r.created_at AS createdAt, w.title, w.instructor, w.starts_at AS startsAt, w.room
     FROM registrations r JOIN workshops w ON w.id = r.workshop_id WHERE r.participant_id = ?`).bind(participant.id).first();
   if (existing) return json({ kind: "registered", participant, registration: existing });
+  const settings = await DB.prepare("SELECT registration_deadline AS registrationDeadline FROM event_settings WHERE id = 1").first<{ registrationDeadline: string | null }>();
+  if (!isRegistrationOpen(settings?.registrationDeadline)) return json({ kind: "closed", message: "O período de inscrições para os Hands-on foi encerrado." }, { status: 409 });
   const workshops = await DB.prepare(`SELECT w.id, w.title, w.description, w.instructor, w.starts_at AS startsAt, w.room, w.capacity,
     COUNT(r.id) AS registrations FROM workshops w LEFT JOIN registrations r ON r.workshop_id = w.id
     WHERE w.active = 1 GROUP BY w.id ORDER BY w.starts_at, w.title`).all();

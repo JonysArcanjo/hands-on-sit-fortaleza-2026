@@ -31,3 +31,9 @@ export const registrations = sqliteTable("registrations", {
   uniqueIndex("idx_registrations_participant_id").on(table.participantId),
   uniqueIndex("idx_registrations_workshop_participant").on(table.workshopId, table.participantId),
 ]);
+
+export const eventSettings = sqliteTable("event_settings", {
+  id: integer("id").primaryKey(),
+  registrationDeadline: text("registration_deadline"),
+  updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+}, (table) => [check("event_settings_singleton", sql`${table.id} = 1`)]);
