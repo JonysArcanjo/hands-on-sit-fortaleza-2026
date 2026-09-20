@@ -10,6 +10,7 @@
     "build": "next build",
     "start": "next start",
     "test": "vitest run",
+    "test:deploy-e2e": "npm run build && node tests/deploy-e2e.mjs",
     "test:render": "npm run build && node --test tests/rendered-html.test.mjs",
     "lint": "eslint . --ignore-pattern .next",
     "db:generate": "drizzle-kit generate"
