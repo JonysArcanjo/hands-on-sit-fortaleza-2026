@@ -36,6 +36,17 @@ describe("application runtime", () => {
     });
   });
 
+  it("serializes concurrent initialization of the same database", async () => {
+    const database = createSqliteDatabase(temporaryPath("concurrent.db"));
+    databases.push(database);
+
+    await Promise.all([ensureDatabase(database), ensureDatabase(database), ensureDatabase(database)]);
+
+    expect((await database.prepare("SELECT title FROM workshops ORDER BY id").all()).results).toHaveLength(2);
+    expect(await database.prepare("SELECT MAX(version) AS version FROM schema_migrations").first())
+      .toEqual({ version: 2 });
+  });
+
   it("preserves application rows after the database is reopened", async () => {
     const databasePath = temporaryPath("persistent.db");
     const database = createSqliteDatabase(databasePath);

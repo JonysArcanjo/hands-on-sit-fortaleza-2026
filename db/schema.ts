@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { check, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { check, index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 export const participants = sqliteTable("participants", {
   id: integer("id").primaryKey({ autoIncrement: true }),
@@ -29,7 +29,7 @@ export const registrations = sqliteTable("registrations", {
   workshopId: integer("workshop_id").notNull().references(() => workshops.id, { onDelete: "restrict" }),
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 }, (table) => [
-  uniqueIndex("idx_registrations_participant_id").on(table.participantId),
+  index("idx_registrations_workshop_id").on(table.workshopId),
   uniqueIndex("idx_registrations_workshop_participant").on(table.workshopId, table.participantId),
 ]);
 

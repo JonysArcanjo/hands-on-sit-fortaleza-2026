@@ -11,6 +11,7 @@ export interface AppEnv {
 }
 
 let databaseState: { path: string; database: DatabaseBinding } | undefined;
+const databaseInitializations = new WeakMap<DatabaseBinding, Promise<void>>();
 
 export function appEnv(): AppEnv {
   const databasePath = process.env.DATABASE_PATH || (process.env.NODE_ENV === "production" ? "" : "./data/hands-on.db");
@@ -29,7 +30,7 @@ export function appEnv(): AppEnv {
   };
 }
 
-export async function ensureDatabase(db: DatabaseBinding): Promise<void> {
+async function initializeDatabase(db: DatabaseBinding): Promise<void> {
   await migrateDatabase(db);
   await db.batch([
     db.prepare("INSERT OR IGNORE INTO event_settings (id, registration_deadline, max_workshops_per_participant) VALUES (1, NULL, 1)"),
@@ -40,6 +41,20 @@ export async function ensureDatabase(db: DatabaseBinding): Promise<void> {
     await db.batch(defaultWorkshops.map((workshop) => db
       .prepare("INSERT INTO workshops (title, description, instructor, starts_at, room, capacity) VALUES (?, ?, ?, ?, ?, ?)")
       .bind(workshop.title, workshop.description, workshop.instructor, workshop.startsAt, workshop.room, workshop.capacity)));
+  }
+}
+
+export async function ensureDatabase(db: DatabaseBinding): Promise<void> {
+  let initialization = databaseInitializations.get(db);
+  if (!initialization) {
+    initialization = initializeDatabase(db);
+    databaseInitializations.set(db, initialization);
+  }
+  try {
+    await initialization;
+  } catch (error) {
+    databaseInitializations.delete(db);
+    throw error;
   }
 }
 
