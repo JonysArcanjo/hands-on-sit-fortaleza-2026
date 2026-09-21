@@ -40,7 +40,7 @@ describe("application runtime", () => {
     const databasePath = temporaryPath("persistent.db");
     const database = createSqliteDatabase(databasePath);
     await ensureDatabase(database);
-    await database.prepare("INSERT INTO participants (name, email) VALUES (?, ?)").bind("Ana", "ana@example.com").run();
+    await database.prepare("INSERT INTO participants (name, name_key, email) VALUES (?, ?, ?)").bind("Ana", "ana", "ana@example.com").run();
     database.close();
 
     const reopened = createSqliteDatabase(databasePath);

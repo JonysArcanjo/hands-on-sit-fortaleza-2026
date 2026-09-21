@@ -1,4 +1,5 @@
 import type { DatabaseBinding } from "../../db/database";
+import { migrateDatabase } from "../../db/migrations";
 import { createSqliteDatabase } from "../../db/sqlite";
 import { defaultWorkshops } from "./default-workshops";
 
@@ -29,39 +30,9 @@ export function appEnv(): AppEnv {
 }
 
 export async function ensureDatabase(db: DatabaseBinding): Promise<void> {
+  await migrateDatabase(db);
   await db.batch([
-    db.prepare(`CREATE TABLE IF NOT EXISTS participants (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      email TEXT NOT NULL UNIQUE,
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    )`),
-    db.prepare(`CREATE TABLE IF NOT EXISTS workshops (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      title TEXT NOT NULL,
-      description TEXT NOT NULL,
-      instructor TEXT NOT NULL,
-      starts_at TEXT NOT NULL,
-      room TEXT NOT NULL,
-      capacity INTEGER NOT NULL CHECK (capacity > 0),
-      active INTEGER NOT NULL DEFAULT 1,
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    )`),
-    db.prepare(`CREATE TABLE IF NOT EXISTS registrations (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      participant_id INTEGER NOT NULL UNIQUE REFERENCES participants(id) ON DELETE RESTRICT,
-      workshop_id INTEGER NOT NULL REFERENCES workshops(id) ON DELETE RESTRICT,
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    )`),
-    db.prepare(`CREATE TABLE IF NOT EXISTS event_settings (
-      id INTEGER PRIMARY KEY CHECK (id = 1),
-      registration_deadline TEXT,
-      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    )`),
-    db.prepare("CREATE INDEX IF NOT EXISTS idx_registrations_workshop_id ON registrations(workshop_id)"),
-    db.prepare("INSERT OR IGNORE INTO event_settings (id, registration_deadline) VALUES (1, NULL)"),
+    db.prepare("INSERT OR IGNORE INTO event_settings (id, registration_deadline, max_workshops_per_participant) VALUES (1, NULL, 1)"),
   ]);
 
   const count = await db.prepare("SELECT COUNT(*) AS total FROM workshops").first<{ total: number }>();

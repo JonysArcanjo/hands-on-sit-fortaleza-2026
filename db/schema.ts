@@ -4,10 +4,11 @@ import { check, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqli
 export const participants = sqliteTable("participants", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
+  nameKey: text("name_key").notNull(),
   email: text("email").notNull(),
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
   updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-}, (table) => [uniqueIndex("idx_participants_email").on(table.email)]);
+}, (table) => [uniqueIndex("idx_participants_email_name").on(table.email, table.nameKey)]);
 
 export const workshops = sqliteTable("workshops", {
   id: integer("id").primaryKey({ autoIncrement: true }),
@@ -35,5 +36,6 @@ export const registrations = sqliteTable("registrations", {
 export const eventSettings = sqliteTable("event_settings", {
   id: integer("id").primaryKey(),
   registrationDeadline: text("registration_deadline"),
+  maxWorkshopsPerParticipant: integer("max_workshops_per_participant").notNull().default(1),
   updatedAt: text("updated_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 }, (table) => [check("event_settings_singleton", sql`${table.id} = 1`)]);
