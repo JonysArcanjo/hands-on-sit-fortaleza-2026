@@ -1,6 +1,6 @@
 # Hands-on SAP Inside Track Fortaleza 2026
 
-Aplicação responsiva, otimizada para smartphones, para participantes previamente inscritos escolherem um único Hands-on. Inclui validação por e-mail, controle de vagas e painel administrativo para importação de participantes, programação e inscrições.
+Aplicação responsiva, otimizada para smartphones, para participantes previamente cadastrados escolherem seus Hands-on. Inclui validação por e-mail e nome, limite configurável de inscrições, controle de vagas e painel administrativo para importação de participantes, programação e inscrições.
 
 ## Desenvolvimento
 
@@ -14,6 +14,16 @@ npm run build
 ```
 
 O desenvolvimento local usa Next.js com SQLite em `./data/hands-on.db`, salvo quando `DATABASE_PATH` for informado.
+
+### Versão local isolada para avaliação
+
+Para avaliar a seleção de nomes sem alterar o banco local principal, inicie a aplicação com outro arquivo SQLite:
+
+```bash
+DATABASE_PATH=./data/shared-email-test.db npm run dev
+```
+
+Use `tests/fixtures/shared-email-participants.csv` no painel administrativo. A fixture contém João Victor e Jonys Arcanjo com o mesmo e-mail (`arcanjocity@gmail.com`), além de uma repetição deliberada de Jonys com variações de espaços e maiúsculas. A importação deve manter os dois nomes e contabilizar essa repetição como duplicada.
 
 ## Configuração administrativa
 
@@ -31,7 +41,9 @@ printf '%s' 'sua-senha' | shasum -a 256
 
 ## Importação
 
-O painel aceita arquivos CSV e XLSX de até 5 MB. A primeira planilha deve conter as colunas `Nome` e `E-mail`. Cabeçalhos ignoram acentos, espaços, hífens e diferenças entre maiúsculas e minúsculas. O e-mail é normalizado e funciona como identificador único.
+O painel aceita arquivos CSV e XLSX de até 5 MB. A primeira planilha deve conter as colunas `Nome` e `E-mail`. Cabeçalhos ignoram acentos, espaços, hífens e diferenças entre maiúsculas e minúsculas. Um mesmo e-mail pode pertencer a mais de um nome; na inscrição, o participante digita somente o e-mail e escolhe seu nome entre os resultados. A identidade e o limite de Hands-on são controlados pela combinação normalizada de e-mail e nome.
+
+O painel também permite configurar o número máximo de Hands-on por participante. O valor inicial é 1. O relatório CSV usa uma linha por inscrição e colunas separadas `Nome` e `E-mail`.
 
 ## Persistência
 

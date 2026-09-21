@@ -124,7 +124,7 @@ Use `Ctrl+C` para sair do acompanhamento dos logs; isso não encerra o contêine
 
 ## 7. Atualizar a aplicação
 
-Faça um backup antes de cada atualização. Depois:
+Faça obrigatoriamente o backup descrito na seção 8 antes de atualizar uma VPS que já contenha participantes ou inscrições. Anote também as contagens atuais do painel (`Participantes`, `Hands-on` e `Inscrições`) para compará-las após a migração. Depois:
 
 ```bash
 cd /opt/hands-on-sit-fortaleza-2026
@@ -135,6 +135,8 @@ curl --fail --show-error http://127.0.0.1/api/health
 ```
 
 O comando recria a aplicação sem remover `hands_on_data`.
+
+Abra o painel administrativo depois da atualização e confirme que as três contagens anotadas permanecem iguais. Faça ainda uma busca com um e-mail cadastrado e confira se os nomes esperados aparecem. Se alguma contagem mudar inesperadamente, não importe uma nova lista nem aceite novas inscrições: preserve o contêiner e os logs e restaure o backup conforme a seção 9.
 
 ## 8. Fazer backup do SQLite
 
