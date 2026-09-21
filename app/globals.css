@@ -16,3 +16,5 @@
 @media(max-width:1050px){.registration-controls{grid-template-columns:1fr}.registration-controls>div{grid-column:auto}}
 @media(max-width:680px){.registration-settings{grid-template-columns:1fr}.participant-choice legend{font-size:22px}.registration-summary-list article{padding:14px}.identity-actions{align-items:stretch;flex-direction:column;gap:4px}.identity-actions .text-button{min-height:44px;width:100%}}
 .brand{min-height:44px}
+.participant-delete-button{width:100%;margin-top:14px}.participant-delete-confirmation{margin-top:14px;padding:16px;border:1px solid #f3b7b2;background:#fff4f2;color:#7a271a}.participant-delete-confirmation p{margin:0 0 12px;line-height:1.5}.participant-delete-confirmation>div{display:flex;align-items:center;gap:12px}.participant-delete-confirmation .danger-button{min-height:44px}.participant-delete-confirmation .text-button{min-height:44px}
+@media(max-width:680px){.participant-delete-confirmation>div{align-items:stretch;flex-direction:column}.participant-delete-confirmation .danger-button,.participant-delete-confirmation .text-button{width:100%}}

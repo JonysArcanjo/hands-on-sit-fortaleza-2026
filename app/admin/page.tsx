@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ParticipantDeletionControls } from "../components/ParticipantDeletionControls";
 import { StatusMessage } from "../components/StatusMessage";
 import { workshopChangesFromForm } from "./workshop-edit";
 import { finishWorkshopCreation } from "./workshop-form";
@@ -15,6 +16,8 @@ export default function AdminDashboard() {
   const [data, setData] = useState<Dashboard | null>(null);
   const [message, setMessage] = useState<{ kind: "success" | "error"; text: string } | null>(null);
   const [editingWorkshopId, setEditingWorkshopId] = useState<number | null>(null);
+  const [participantDeletionArmed, setParticipantDeletionArmed] = useState(false);
+  const [deletingParticipants, setDeletingParticipants] = useState(false);
   async function load() {
     const response = await fetch("/api/admin/dashboard");
     if (response.status === 401) { router.replace("/admin/login"); return; }
@@ -58,6 +61,18 @@ export default function AdminDashboard() {
     if (!response.ok) setMessage({ kind: "error", text: result.message ?? "Não foi possível salvar o limite." });
     else { setMessage({ kind: "success", text: "Limite de Hands-on atualizado." }); await load(); }
   }
+  async function deleteParticipants() {
+    setDeletingParticipants(true);
+    const response = await fetch("/api/admin/participants", { method: "DELETE" });
+    const result = await response.json() as { message?: string; deletedParticipants?: number; deletedRegistrations?: number };
+    if (!response.ok) setMessage({ kind: "error", text: result.message ?? "Não foi possível excluir os participantes." });
+    else {
+      setMessage({ kind: "success", text: `${result.deletedParticipants} participantes e ${result.deletedRegistrations} inscrições excluídos.` });
+      setParticipantDeletionArmed(false);
+      await load();
+    }
+    setDeletingParticipants(false);
+  }
   async function removeRegistration(id: number) {
     if (!window.confirm("Cancelar esta inscrição e liberar a vaga?")) return;
     await fetch(`/api/admin/registrations/${id}`, { method: "DELETE" }); await load();
@@ -95,7 +110,7 @@ export default function AdminDashboard() {
       {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- API downloads require a native navigation. */}
       <a className="primary-button download-button" href="/api/admin/registrations/export">Baixar inscritos por Hands-on <span aria-hidden="true">↓</span></a>
     </section>
-    <div className="admin-columns"><section className="admin-card"><span className="eyebrow">PARTICIPANTES</span><h2>Importar lista</h2><p>Envie CSV ou XLSX com as colunas Nome e E-mail. Limite de 5 MB.</p><form onSubmit={importFile}><label className="file-field">Arraste ou selecione o arquivo<input name="file" type="file" accept=".csv,.xlsx" required /></label><button className="primary-button">Importar participantes</button></form></section>
+    <div className="admin-columns"><section className="admin-card"><span className="eyebrow">PARTICIPANTES</span><h2>Importar lista</h2><p>Envie CSV ou XLSX com as colunas Nome e E-mail. Limite de 5 MB.</p><form onSubmit={importFile}><label className="file-field">Arraste ou selecione o arquivo<input name="file" type="file" accept=".csv,.xlsx" required /></label><button className="primary-button">Importar participantes</button></form><ParticipantDeletionControls armed={participantDeletionArmed} disabled={deletingParticipants || data.metrics.participants === 0} onArm={() => setParticipantDeletionArmed(true)} onCancel={() => setParticipantDeletionArmed(false)} onConfirm={deleteParticipants} /></section>
     <section className="admin-card"><span className="eyebrow">PROGRAMAÇÃO</span><h2>Novo Hands-on</h2><form className="workshop-form" onSubmit={addWorkshop}><label>Título<input name="title" required /></label><label>Instrutor<input name="instructor" required /></label><label>Data<input name="startsAt" type="date" defaultValue="2026-10-31" required /></label><label>Sala<input name="room" required /></label><label>Capacidade<input name="capacity" type="number" min="1" required /></label><label className="full">Descrição<textarea name="description" required rows={3} /></label><button className="primary-button full">Adicionar Hands-on</button></form></section></div>
     <section className="admin-card table-card"><div className="table-heading"><div><span className="eyebrow">SESSÕES</span><h2>Hands-on cadastrados</h2></div></div><div className="table-wrap"><table><thead><tr><th>Hands-on</th><th>Data</th><th>Sala</th><th>Ocupação</th><th>Estado</th><th>Ações</th></tr></thead><tbody>{data.workshops.map((workshop) => editingWorkshopId === workshop.id ? <tr className="workshop-edit-row" key={workshop.id}><td colSpan={6}><form className="workshop-edit-form" onSubmit={(event) => saveWorkshop(event, workshop)}><label>Título<input name="title" defaultValue={workshop.title} required /></label><label>Instrutor<input name="instructor" defaultValue={workshop.instructor} required /></label><label>Sala<input name="room" defaultValue={workshop.room} required /></label><label>Capacidade<input name="capacity" type="number" min={workshop.registrations || 1} defaultValue={workshop.capacity} required /></label><div className="edit-actions"><button className="primary-button">Salvar</button><button type="button" className="text-button" onClick={() => setEditingWorkshopId(null)}>Cancelar</button></div></form></td></tr> : <tr key={workshop.id}><td data-label="Hands-on"><b>{workshop.title}</b><small>{workshop.instructor}</small></td><td data-label="Data">31/10/2026</td><td data-label="Sala">{workshop.room}</td><td data-label="Ocupação">{workshop.registrations}/{workshop.capacity}</td><td data-label="Estado"><span className={`availability ${workshop.active ? "" : "sold-out"}`}>{workshop.active ? "Ativo" : "Inativo"}</span></td><td data-label="Ações"><div className="row-actions"><button onClick={() => setEditingWorkshopId(workshop.id)}>Editar</button><button onClick={() => updateWorkshop(workshop, { active: workshop.active ? 0 : 1 })}>{workshop.active ? "Desativar" : "Ativar"}</button><button className="danger-button" onClick={() => deleteWorkshop(workshop)}>Excluir</button></div></td></tr>)}</tbody></table></div></section>
     <section className="admin-card table-card"><span className="eyebrow">INSCRIÇÕES</span><h2>Participantes confirmados</h2><div className="table-wrap"><table><thead><tr><th>Participante</th><th>Hands-on</th><th>Data</th><th>Ação</th></tr></thead><tbody>{data.registrations.map((registration) => <tr key={registration.id}><td data-label="Participante"><b>{registration.name}</b><small>{registration.email}</small></td><td data-label="Hands-on">{registration.workshop}</td><td data-label="Data">{new Date(registration.createdAt).toLocaleString("pt-BR")}</td><td data-label="Ação"><button className="danger-button" onClick={() => removeRegistration(registration.id)}>Cancelar</button></td></tr>)}</tbody></table></div></section>

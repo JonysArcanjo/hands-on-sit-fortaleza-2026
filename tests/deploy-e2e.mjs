@@ -248,6 +248,17 @@ async function verifyCompleteWorkflow() {
     const exportedCsv = await exported.text();
     assert(exported.status === 200, "Exportação CSV falhou.");
     assert(exportedCsv.includes("João Victor") && exportedCsv.includes("arcanjocity@gmail.com") && exportedCsv.includes(firstWorkshop.title), "Exportação CSV não contém os dados inscritos.");
+
+    const cleared = await jsonRequest(baseUrl, "/api/admin/participants", {
+      method: "DELETE",
+      headers: { cookie },
+    });
+    assert(cleared.response.status === 200 && cleared.body.deletedParticipants === 5 && cleared.body.deletedRegistrations === 5,
+      `Exclusão dos participantes falhou: ${JSON.stringify(cleared.body)}`);
+    const clearedDashboard = await jsonRequest(baseUrl, "/api/admin/dashboard", { headers: { cookie } });
+    assert(clearedDashboard.body.metrics.participants === 0 && clearedDashboard.body.metrics.registrations === 0,
+      "O painel deve zerar participantes e inscrições após a exclusão.");
+    assert(clearedDashboard.body.metrics.workshops === 4, "A exclusão de participantes não pode remover Hands-on.");
   } finally {
     await stopApplication(application.child);
   }
@@ -256,7 +267,7 @@ async function verifyCompleteWorkflow() {
 try {
   await verifyMissingAdminConfiguration();
   await verifyCompleteWorkflow();
-  console.log("Deploy E2E: health, login, prazo, importação compartilhada, escolha de nome, limites, concorrência, dashboard e exportação OK.");
+  console.log("Deploy E2E: health, login, prazo, importação compartilhada, escolha de nome, limites, concorrência, dashboard, exportação e exclusão administrativa OK.");
 } finally {
   await Promise.all([...children].map(stopApplication));
   for (const directory of temporaryDirectories) rmSync(directory, { recursive: true, force: true });
