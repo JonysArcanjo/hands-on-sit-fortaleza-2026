@@ -8,7 +8,7 @@ import { finishWorkshopCreation } from "./workshop-form";
 
 type Workshop = { id: number; title: string; description: string; instructor: string; startsAt: string; room: string; capacity: number; active: number; registrations: number };
 type Registration = { id: number; name: string; email: string; workshop: string; createdAt: string };
-type Dashboard = { metrics: Record<string, number>; workshops: Workshop[]; registrations: Registration[]; settings: { registrationDeadline: string | null } };
+type Dashboard = { metrics: Record<string, number>; workshops: Workshop[]; registrations: Registration[]; settings: { registrationDeadline: string | null; maxWorkshopsPerParticipant: number } };
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -50,6 +50,14 @@ export default function AdminDashboard() {
     if (!response.ok) setMessage({ kind: "error", text: result.message ?? "Não foi possível salvar o prazo." });
     else { setMessage({ kind: "success", text: "Prazo das inscrições atualizado." }); await load(); }
   }
+  async function saveMaximum(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const maximum = Number(new FormData(event.currentTarget).get("maximum"));
+    const response = await fetch("/api/admin/settings/max-workshops", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ maximum }) });
+    const result = await response.json() as { message?: string };
+    if (!response.ok) setMessage({ kind: "error", text: result.message ?? "Não foi possível salvar o limite." });
+    else { setMessage({ kind: "success", text: "Limite de Hands-on atualizado." }); await load(); }
+  }
   async function removeRegistration(id: number) {
     if (!window.confirm("Cancelar esta inscrição e liberar a vaga?")) return;
     await fetch(`/api/admin/registrations/${id}`, { method: "DELETE" }); await load();
@@ -80,7 +88,10 @@ export default function AdminDashboard() {
     <section className="metric-grid">{Object.entries(labels).map(([key, label]) => <article key={key}><span>{label}</span><strong>{Number(data.metrics[key] ?? 0)}</strong></article>)}</section>
     <section className="admin-card registration-controls">
       <div><span className="eyebrow">INSCRIÇÕES</span><h2>Prazo e relatório</h2><p>Defina o último dia para inscrições ou baixe a relação agrupada por Hands-on.</p></div>
-      <form onSubmit={saveDeadline}><label>Data final<input name="registrationDeadline" type="date" defaultValue={data.settings.registrationDeadline ?? ""} required /></label><button className="primary-button">Salvar prazo</button></form>
+      <div className="registration-settings">
+        <form onSubmit={saveDeadline}><label>Data final<input name="registrationDeadline" type="date" defaultValue={data.settings.registrationDeadline ?? ""} required /></label><button className="primary-button">Salvar prazo</button></form>
+        <form onSubmit={saveMaximum}><label>Máximo por participante<input name="maximum" type="number" min="1" max="100" defaultValue={data.settings.maxWorkshopsPerParticipant} required /></label><button className="primary-button">Salvar limite</button></form>
+      </div>
       {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- API downloads require a native navigation. */}
       <a className="primary-button download-button" href="/api/admin/registrations/export">Baixar inscritos por Hands-on <span aria-hidden="true">↓</span></a>
     </section>

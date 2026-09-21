@@ -68,6 +68,9 @@ test("server-renders the event registration journey", { timeout: 40_000 }, async
   assert.match(html, /<title>Hands-on SAP Inside Track Fortaleza 2026<\/title>/i);
   assert.match(html, /Use o mesmo e-mail da sua inscrição no evento/i);
   assert.match(html, /Verificar minha inscrição/i);
+  assert.match(html, /Identificação/i);
+  assert.match(html, /Escolha/i);
+  assert.match(html, /Confirmação/i);
   assert.match(html, /Acesso da organização/i);
   assert.match(html, /31 OUT · FORTALEZA, CE/i);
   assert.doesNotMatch(html, /19 SET|2026-09-19|10:30|14:00/i);

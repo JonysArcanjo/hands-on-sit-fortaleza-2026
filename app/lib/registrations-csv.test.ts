@@ -7,6 +7,6 @@ describe("registrations CSV", () => {
       { workshop: "Clean Core, na prática", name: 'Ana "Bia"', email: "ana@example.com", createdAt: "2026-08-25 13:29:53" },
     ]);
 
-    expect(csv).toBe('\uFEFFHands-on,Participante,E-mail,Data da inscrição\r\n"Clean Core, na prática","Ana ""Bia""",ana@example.com,2026-08-25 13:29:53');
+    expect(csv).toBe('\uFEFFHands-on,Nome,E-mail,Data da inscrição\r\n"Clean Core, na prática","Ana ""Bia""",ana@example.com,2026-08-25 13:29:53');
   });
 });

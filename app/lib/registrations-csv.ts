@@ -10,7 +10,7 @@ function csvCell(value: string): string {
 }
 
 export function buildRegistrationsCsv(rows: RegistrationExportRow[]): string {
-  const header = ["Hands-on", "Participante", "E-mail", "Data da inscrição"];
+  const header = ["Hands-on", "Nome", "E-mail", "Data da inscrição"];
   const body = rows.map((row) => [row.workshop, row.name, row.email, row.createdAt]);
   return `\uFEFF${[header, ...body].map((row) => row.map(csvCell).join(",")).join("\r\n")}`;
 }
