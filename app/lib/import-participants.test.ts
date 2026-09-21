@@ -11,6 +11,7 @@ describe("participant spreadsheet parsing", () => {
     expect(result.valid).toEqual([{ name: "Ana Maria", email: "ana@example.com", row: 2 }]);
     expect(result.errors).toEqual([{ row: 3, message: "E-mail inválido." }]);
     expect(result.ignored).toBe(1);
+    expect(result.duplicates).toBe(0);
   });
 
   it("requires Nome and E-mail columns", () => {
@@ -19,11 +20,23 @@ describe("participant spreadsheet parsing", () => {
     );
   });
 
-  it("keeps the last name for duplicate emails", () => {
+  it("keeps different registered names that share an email", () => {
     const result = parseParticipantRows([
-      { Nome: "Ana", Email: "ana@example.com" },
-      { Nome: "Ana Maria", Email: "ANA@example.com" },
+      { Nome: "João Victor", Email: "arcanjocity@gmail.com" },
+      { Nome: "Jonys Arcanjo", Email: "ARCANJOCITY@gmail.com" },
     ]);
-    expect(result.valid).toEqual([{ name: "Ana Maria", email: "ana@example.com", row: 3 }]);
+    expect(result.valid).toEqual([
+      { name: "João Victor", email: "arcanjocity@gmail.com", row: 2 },
+      { name: "Jonys Arcanjo", email: "arcanjocity@gmail.com", row: 3 },
+    ]);
+  });
+
+  it("counts an exact email and name repetition once", () => {
+    const result = parseParticipantRows([
+      { Nome: "Jonys Arcanjo", Email: "arcanjocity@gmail.com" },
+      { Nome: "  JONYS   ARCANJO ", Email: " ARCANJOCITY@gmail.com " },
+    ]);
+    expect(result.valid).toEqual([{ name: "Jonys Arcanjo", email: "arcanjocity@gmail.com", row: 2 }]);
+    expect(result.duplicates).toBe(1);
   });
 });

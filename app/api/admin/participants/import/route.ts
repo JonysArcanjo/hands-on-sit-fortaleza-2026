@@ -2,6 +2,7 @@ import { requireAdmin } from "../../../../lib/admin";
 import { parseParticipantRows } from "../../../../lib/import-participants";
 import { parseParticipantFile } from "../../../../lib/participant-file";
 import { appEnv, ensureDatabase, json } from "../../../../lib/runtime";
+import { participantNameKey } from "../../../../../db/participant-identity";
 
 export async function POST(request: Request) {
   if (!(await requireAdmin(request))) return json({ message: "Sessão expirada." }, { status: 401 });
@@ -18,16 +19,20 @@ export async function POST(request: Request) {
     let created = 0;
     let updated = 0;
     for (const participant of result.valid) {
-      const existing = await DB.prepare("SELECT id, name FROM participants WHERE email = ?").bind(participant.email).first<{ id: number; name: string }>();
+      const nameKey = participantNameKey(participant.name);
+      const existing = await DB.prepare("SELECT id FROM participants WHERE email = ? AND name_key = ?")
+        .bind(participant.email, nameKey).first<{ id: number }>();
       if (existing) {
-        await DB.prepare("UPDATE participants SET name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?").bind(participant.name, existing.id).run();
+        await DB.prepare("UPDATE participants SET name = ?, name_key = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+          .bind(participant.name, nameKey, existing.id).run();
         updated += 1;
       } else {
-        await DB.prepare("INSERT INTO participants (name, email) VALUES (?, ?)").bind(participant.name, participant.email).run();
+        await DB.prepare("INSERT INTO participants (name, name_key, email) VALUES (?, ?, ?)")
+          .bind(participant.name, nameKey, participant.email).run();
         created += 1;
       }
     }
-    return json({ created, updated, rejected: result.errors.length, ignored: result.ignored, errors: result.errors });
+    return json({ created, updated, rejected: result.errors.length, ignored: result.ignored, duplicates: result.duplicates, errors: result.errors });
   } catch (error) {
     return json({ message: error instanceof Error ? error.message : "Não foi possível importar o arquivo." }, { status: 400 });
   }

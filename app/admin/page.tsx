@@ -30,9 +30,9 @@ export default function AdminDashboard() {
   async function importFile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); const form = new FormData(event.currentTarget);
     const response = await fetch("/api/admin/participants/import", { method: "POST", body: form });
-    const result = await response.json() as { message?: string; created?: number; updated?: number; rejected?: number; ignored?: number };
+    const result = await response.json() as { message?: string; created?: number; updated?: number; rejected?: number; ignored?: number; duplicates?: number };
     if (!response.ok) setMessage({ kind: "error", text: result.message ?? "Não foi possível importar." });
-    else { setMessage({ kind: "success", text: `${result.created} criados, ${result.updated} atualizados, ${result.rejected} rejeitados e ${result.ignored} ignorados.` }); await load(); }
+    else { setMessage({ kind: "success", text: `${result.created} criados, ${result.updated} atualizados, ${result.rejected} rejeitados, ${result.ignored} ignorados e ${result.duplicates} repetições no arquivo.` }); await load(); }
   }
   async function addWorkshop(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); const formElement = event.currentTarget; const form = new FormData(formElement);

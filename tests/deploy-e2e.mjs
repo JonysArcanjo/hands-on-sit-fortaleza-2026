@@ -135,6 +135,9 @@ async function verifyCompleteWorkflow() {
       "Ana E2E,ana.e2e@example.com",
       "Bruno E2E,bruno.e2e@example.com",
       "Carla E2E,carla.e2e@example.com",
+      "João Victor,arcanjocity@gmail.com",
+      "Jonys Arcanjo,arcanjocity@gmail.com",
+      "  JONYS   ARCANJO ,ARCANJOCITY@gmail.com",
     ].join("\n");
     const form = new FormData();
     form.set("file", new File([csv], "participantes.csv", { type: "text/csv" }));
@@ -143,7 +146,8 @@ async function verifyCompleteWorkflow() {
       headers: { cookie },
       body: form,
     });
-    assert(imported.response.status === 200 && imported.body.created === 3, `Importação falhou: ${JSON.stringify(imported.body)}`);
+    assert(imported.response.status === 200 && imported.body.created === 5 && imported.body.duplicates === 1,
+      `Importação compartilhada falhou: ${JSON.stringify(imported.body)}`);
 
     async function eligibility(email) {
       return jsonRequest(baseUrl, "/api/eligibility", {
