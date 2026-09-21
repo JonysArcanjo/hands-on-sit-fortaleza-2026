@@ -22,6 +22,7 @@ export function PublicRegistration() {
   const [maximum, setMaximum] = useState(1);
   const [remaining, setRemaining] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
+  const [newlyConfirmedWorkshopId, setNewlyConfirmedWorkshopId] = useState<number | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -32,6 +33,7 @@ export function PublicRegistration() {
     setMaximum(1);
     setRemaining(0);
     setSelected(null);
+    setNewlyConfirmedWorkshopId(null);
   }
 
   function applyStatus(data: EligibilityResponse) {
@@ -87,6 +89,7 @@ export function PublicRegistration() {
 
   async function confirm() {
     if (!participant || !selected) return;
+    const workshopId = selected;
     setLoading(true);
     setMessage(null);
     try {
@@ -100,6 +103,7 @@ export function PublicRegistration() {
         setMessage(data.message ?? "Não foi possível confirmar.");
         return;
       }
+      setNewlyConfirmedWorkshopId(workshopId);
     } catch { setMessage("Não foi possível confirmar agora. Tente novamente."); }
     finally { setLoading(false); }
   }
@@ -123,11 +127,11 @@ export function PublicRegistration() {
       <div className="registration-panel">
         {!participant && candidates.length === 0 && <><span className="panel-number">01</span><h2>Vamos encontrar sua inscrição</h2><p>Use o mesmo e-mail da sua inscrição no evento.</p><form onSubmit={checkEmail}><label htmlFor="email">E-mail da inscrição</label><input id="email" type="email" required autoComplete="email" placeholder="voce@empresa.com" value={email} onChange={(event) => setEmail(event.target.value)} /><button className="primary-button" disabled={loading}>{loading ? "Verificando…" : "Verificar minha inscrição"}<span aria-hidden="true">→</span></button></form></>}
         {!participant && candidates.length > 0 && <><span className="panel-number">01</span><ParticipantChoice participants={candidates} disabled={loading} onSelect={chooseParticipant} /><button className="text-button" onClick={resetAll}>← Informar outro e-mail</button></>}
-        {participant && <><span className="panel-number">02</span><h2>Olá, {participant.name.split(" ")[0]}!</h2>{registrations.length === 0 && <p>Escolha seu Hands-on. Seu limite é de {maximum} {maximum === 1 ? "sessão" : "sessões"}.</p>}<RegistrationSummaryView registrations={registrations} maximum={maximum} remaining={remaining} /><div className="identity-actions">{candidates.length > 1 && <button className="text-button" onClick={changeParticipant}>Trocar nome</button>}<button className="text-button" onClick={resetAll}>Consultar outro e-mail</button></div></>}
+        {participant && <><span className="panel-number">02</span><h2>Olá, {participant.name.split(" ")[0]}!</h2>{registrations.length === 0 && <p>Escolha seu Hands-on. Seu limite é de {maximum} {maximum === 1 ? "sessão" : "sessões"}.</p>}<RegistrationSummaryView registrations={registrations} maximum={maximum} remaining={remaining} newlyConfirmedWorkshopId={newlyConfirmedWorkshopId} /><div className="identity-actions">{candidates.length > 1 && <button className="text-button" onClick={changeParticipant}>Trocar nome</button>}<button className="text-button" onClick={resetAll}>Consultar outro e-mail</button></div></>}
         {message && <StatusMessage kind="error">{message}</StatusMessage>}
       </div>
     </section>
-    {participant && remaining > 0 && workshops.length > 0 && <section className="workshop-section"><div className="section-heading"><span className="eyebrow">SESSÕES DISPONÍVEIS</span><h2>Escolha onde você quer colocar a mão na massa.</h2></div><div className="workshop-grid">{workshops.map((workshop) => <WorkshopCard key={workshop.id} workshop={workshop} selected={selected === workshop.id} onSelect={() => setSelected(workshop.id)} />)}</div><div className="sticky-confirm"><span>{selected ? "Hands-on selecionado" : `Você ainda pode escolher ${remaining}`}</span><button className="primary-button" disabled={!selected || loading} onClick={confirm}>{loading ? "Confirmando…" : "Confirmar meu Hands-on"}<span aria-hidden="true">→</span></button></div></section>}
+    {participant && remaining > 0 && workshops.length > 0 && <section className="workshop-section"><div className="section-heading"><span className="eyebrow">SESSÕES DISPONÍVEIS</span><h2>Escolha onde você quer colocar a mão na massa.</h2></div><div className="workshop-grid">{workshops.map((workshop) => <WorkshopCard key={workshop.id} workshop={workshop} selected={selected === workshop.id} onSelect={() => { setSelected(workshop.id); setNewlyConfirmedWorkshopId(null); }} />)}</div><div className="sticky-confirm"><span>{selected ? "Hands-on selecionado" : `Você ainda pode escolher ${remaining}`}</span><button className="primary-button" disabled={!selected || loading} onClick={confirm}>{loading ? "Confirmando…" : "Confirmar meu Hands-on"}<span aria-hidden="true">→</span></button></div></section>}
     <footer><span>Comunidade · Conhecimento · Conexão</span><span>Fortaleza, Ceará — 2026</span></footer>
   </main>;
 }

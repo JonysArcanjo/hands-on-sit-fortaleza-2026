@@ -1,4 +1,6 @@
+import { Fragment } from "react";
 import type { RegistrationSummary as Registration } from "../lib/participant-status";
+import { StatusMessage } from "./StatusMessage";
 
 function eventDate(value: string): string {
   const [year, month, day] = value.slice(0, 10).split("-").map(Number);
@@ -10,10 +12,12 @@ export function RegistrationSummary({
   registrations,
   maximum,
   remaining,
+  newlyConfirmedWorkshopId,
 }: {
   registrations: Registration[];
   maximum: number;
   remaining: number;
+  newlyConfirmedWorkshopId?: number | null;
 }) {
   return <section className="registration-summary" aria-live="polite">
     <div className="registration-balance">
@@ -23,10 +27,15 @@ export function RegistrationSummary({
         : "Você atingiu o limite de inscrições"}</strong>
     </div>
     {registrations.length > 0 && <div className="registration-summary-list">
-      {registrations.map((registration) => <article key={registration.id}>
-        <span className="confirmation-mark" aria-hidden="true">✓</span>
-        <div><h3>{registration.title}</h3><p>{registration.instructor}</p><p>{eventDate(registration.startsAt)}</p><b>{registration.room}</b></div>
-      </article>)}
+      {registrations.map((registration) => <Fragment key={registration.id}>
+        <article>
+          <span className="confirmation-mark" aria-hidden="true">✓</span>
+          <div><h3>{registration.title}</h3><p>{registration.instructor}</p><p>{eventDate(registration.startsAt)}</p><b>{registration.room}</b></div>
+        </article>
+        {registration.workshopId === newlyConfirmedWorkshopId && <StatusMessage kind="success">
+          <strong>Inscrição realizada com sucesso!</strong><br />Sua vaga no Hands-on foi confirmada.
+        </StatusMessage>}
+      </Fragment>)}
     </div>}
   </section>;
 }

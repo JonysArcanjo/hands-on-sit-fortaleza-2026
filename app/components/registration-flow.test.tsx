@@ -37,4 +37,32 @@ describe("shared email registration components", () => {
     expect(html).toContain("Você pode escolher mais 1 Hands-on");
     expect(html).not.toMatch(/20:00|10:30|14:00/);
   });
+
+  it("shows a successful confirmation below the registered workshop only after a new registration", () => {
+    const registration = {
+      id: 9,
+      workshopId: 3,
+      title: "SAC Analytics Cloud",
+      instructor: "Jonys Arcanjo",
+      startsAt: "2026-10-31",
+      room: "Vista Mar",
+      createdAt: "2026-09-20 20:00:00",
+    };
+    const confirmed = renderToStaticMarkup(<RegistrationSummary
+      registrations={[registration]}
+      maximum={2}
+      remaining={1}
+      newlyConfirmedWorkshopId={3}
+    />);
+    const ordinaryConsultation = renderToStaticMarkup(<RegistrationSummary
+      registrations={[registration]}
+      maximum={2}
+      remaining={1}
+    />);
+
+    expect(confirmed).toContain("Inscrição realizada com sucesso!");
+    expect(confirmed).toContain("Sua vaga no Hands-on foi confirmada.");
+    expect(confirmed.indexOf("SAC Analytics Cloud")).toBeLessThan(confirmed.indexOf("Inscrição realizada com sucesso!"));
+    expect(ordinaryConsultation).not.toContain("Inscrição realizada com sucesso!");
+  });
 });
